@@ -79,27 +79,35 @@ public class GooglePeopleService {
         );
     }
 
-    public void updateContact(OAuth2AuthorizedClient client, String resourceName, Contact contact) throws IOException, GeneralSecurityException {
+    public Contact updateContact(OAuth2AuthorizedClient client, String resourceName, Contact contact) throws IOException, GeneralSecurityException {
         PeopleService service = createPeopleService(client);
         
-        // First, get the existing contact to get its etag
-        Person existingPerson = service.people().get(resourceName)
-                .setPersonFields("names,emailAddresses,phoneNumbers,metadata")
-                .execute();
+        try {
+            // Delete the old contact
+            service.people().deleteContact(resourceName).execute();
+            
+            // Create a new contact with the updated information
+            Person person = new Person()
+                    .setNames(Collections.singletonList(new Name()
+                            .setGivenName(contact.getFirstName())
+                            .setFamilyName(contact.getLastName())))
+                    .setEmailAddresses(Collections.singletonList(new EmailAddress().setValue(contact.getEmail())))
+                    .setPhoneNumbers(Collections.singletonList(new PhoneNumber().setValue(contact.getPhoneNumber())));
 
-        // Create update person with etag
-        Person updatePerson = new Person()
-                .setEtag(existingPerson.getEtag())
-                .setNames(Collections.singletonList(new Name()
-                        .setGivenName(contact.getFirstName())
-                        .setFamilyName(contact.getLastName())))
-                .setEmailAddresses(Collections.singletonList(new EmailAddress().setValue(contact.getEmail())))
-                .setPhoneNumbers(Collections.singletonList(new PhoneNumber().setValue(contact.getPhoneNumber())));
-
-        // Update with updatePersonFields parameter
-        service.people().updateContact(resourceName, updatePerson)
-                .setUpdatePersonFields("names,emailAddresses,phoneNumbers")
-                .execute();
+            // Create new contact
+            Person created = service.people().createContact(person).execute();
+            
+            return new Contact(
+                    created.getNames().get(0).getGivenName(),
+                    created.getNames().get(0).getFamilyName(),
+                    created.getEmailAddresses().get(0).getValue(),
+                    created.getPhoneNumbers().get(0).getValue(),
+                    created.getResourceName()
+            );
+        } catch (Exception e) {
+            System.err.println("Error updating contact: " + e.getMessage());
+            throw e;
+        }
     }
 
     public void deleteContact(OAuth2AuthorizedClient client, String resourceName) throws IOException, GeneralSecurityException {

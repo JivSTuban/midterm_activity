@@ -13,7 +13,7 @@ This application allows users to:
 
 ## Showcase
 
-https://github.com/user-attachments/assets/52734dbc-e43c-434d-b37e-4c9ada008d01
+https://github.com/user-attachments/assets/50523e53-2b48-45cb-bc60-cf034231b4ef
 
 ## Prerequisites
 
@@ -149,6 +149,8 @@ The main challenges encountered during development were:
 - Managing partial updates while preserving existing contact data
 - Synchronizing local state with Google's server state
 - Dealing with concurrent modifications
+- Preserving field metadata during updates
+- Implementing proper error handling for failed updates
 
 ### Delete Operation Challenges
 - Implementing proper error handling for non-existent contacts
