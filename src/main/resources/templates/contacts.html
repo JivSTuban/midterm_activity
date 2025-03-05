@@ -4,92 +4,170 @@
     <title>Contacts</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <style>
-        body {
-            margin-top: 20px;
-        }
-
-        .modal-body input {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
+        body { margin-top: 20px; }
         .success-message,
         .error-message {
             margin-top: 1rem;
             padding: 10px;
             border-radius: 4px;
         }
-
         .success-message {
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
-
         .error-message {
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+        .form-control.is-valid,
+        .was-validated .form-control:valid {
+            border-color: #198754;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+        .form-control.is-invalid,
+        .was-validated .form-control:invalid {
+            border-color: #dc3545;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+        .add-field-btn {
+            margin-top: 0.5rem;
+        }
+        .remove-field-btn {
+            margin-left: 0.5rem;
         }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Contacts</h1>
-
     <div th:if="${success}" class="success-message" th:text="${success}"></div>
     <div th:if="${error}" class="error-message" th:text="${error}"></div>
 
-    <!-- Add Contact Button -->
-    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal">Add Contact</button>
+    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addModal">
+        Add Contact
+    </button>
 
     <table class="table table-striped">
         <thead>
-        <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Phone Number</th>
-            <th>Actions</th>
-        </tr>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Actions</th>
+            </tr>
         </thead>
         <tbody>
-        <tr th:each="contact : ${contacts}">
-            <td th:text="${contact.firstName}"></td>
-            <td th:text="${contact.lastName}"></td>
-            <td th:text="${contact.email}"></td>
-            <td th:text="${contact.phoneNumber}"></td>
-            <td>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal"
-                    th:data-resource-name="${contact.resourceName}"
-                    th:data-first-name="${contact.firstName}"
-                    th:data-last-name="${contact.lastName}"
-                    th:data-email="${contact.email}"
-                    th:data-phone-number="${contact.phoneNumber}">Edit</button>
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                    th:data-resource-name="${contact.resourceName}">Delete</button>
-            </td>
-        </tr>
+            <tr th:each="contact : ${contacts}" th:data-resource-name="${contact.resourceName}">
+                <td th:text="${contact.firstName}"></td>
+                <td th:text="${contact.lastName}"></td>
+                <td>
+                    <div th:each="email : ${contact.email}">
+                        <span th:text="${email}"></span>
+                    </div>
+                </td>
+                <td>
+                    <div th:each="phone : ${contact.phoneNumber}">
+                        <span th:text="${phone}"></span>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal"
+                        th:data-resource-name="${contact.resourceName}"
+                        th:data-first-name="${contact.firstName}"
+                        th:data-last-name="${contact.lastName}"
+                        th:data-email="${#strings.arrayJoin(contact.email,',')}"
+                        th:data-phone-number="${#strings.arrayJoin(contact.phoneNumber,',')}">Edit</button>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                        th:data-resource-name="${contact.resourceName}">Delete</button>
+                </td>
+            </tr>
         </tbody>
     </table>
 </div>
 
 <!-- Add Modal -->
-<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+<div class="modal fade" id="addModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addModalLabel">Add New Contact</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Add New Contact</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form th:action="@{/contacts/add}" method="post">
+            <form th:action="@{/contacts/add}" method="post" id="addContactForm" class="needs-validation" novalidate>
                 <div class="modal-body">
-                    <input type="text" id="addFirstName" name="firstName" placeholder="First Name" required>
-                    <input type="text" id="addLastName" name="lastName" placeholder="Last Name" required>
-                    <input type="email" id="addEmail" name="email" placeholder="Email" required>
-                    <input type="tel" id="addPhoneNumber" name="phoneNumber" placeholder="Phone Number">
+                    <div class="mb-3">
+                        <label for="addFirstName" class="form-label">First Name*</label>
+                        <input type="text" class="form-control" id="addFirstName" name="firstName" 
+                               pattern="^[A-Za-z\s]{2,50}$" required
+                               oninput="validateName(this)">
+                        <div class="invalid-feedback">Please enter a valid first name (letters only)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="addLastName" class="form-label">Last Name*</label>
+                        <input type="text" class="form-control" id="addLastName" name="lastName" 
+                               pattern="^[A-Za-z\s]{2,50}$" required
+                               oninput="validateName(this)">
+                        <div class="invalid-feedback">Please enter a valid last name (letters only)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email Addresses*</label>
+                        <div id="addEmailContainer">
+                            <div class="input-group mb-2">
+                                <input type="email" class="form-control" name="email[]" 
+                                       pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" required
+                                       oninput="validateEmail(this)"
+                                       placeholder="Email address">
+                                <button type="button" class="btn btn-outline-danger remove-field-btn" onclick="removeField(this)">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm add-field-btn" onclick="addEmailField('addEmailContainer')">
+                            <i class="bi bi-plus"></i> Add Email
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Phone Numbers*</label>
+                        <div id="addPhoneContainer">
+                            <div class="input-group mb-2">
+                                <select class="form-select" name="countryCode[]" style="max-width: 120px;" required>
+                                    <option value="+63">🇵🇭 +63</option>
+                                    <option value="+1">🇺🇸 +1</option>
+                                    <option value="+44">🇬🇧 +44</option>
+                                    <option value="+81">🇯🇵 +81</option>
+                                    <option value="+86">🇨🇳 +86</option>
+                                    <option value="+82">🇰🇷 +82</option>
+                                    <option value="+65">🇸🇬 +65</option>
+                                </select>
+                                <input type="tel" class="form-control" name="phoneNumber[]" 
+                                       required oninput="validatePhone(this)"
+                                       placeholder="123 456 7890">
+                                <button type="button" class="btn btn-outline-danger remove-field-btn" onclick="removeField(this)">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm add-field-btn" onclick="addPhoneField('addPhoneContainer')">
+                            <i class="bi bi-plus"></i> Add Phone
+                        </button>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -101,24 +179,55 @@
 </div>
 
 <!-- Edit Modal -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+<div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Edit Contact</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Edit Contact</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form th:action="@{/contacts/update}" method="post">
+            <form th:action="@{/contacts/update}" method="post" id="editContactForm" class="needs-validation" novalidate>
                 <div class="modal-body">
-                    <input type="text" id="editFirstName" name="firstName" placeholder="First Name" required>
-                    <input type="text" id="editLastName" name="lastName" placeholder="Last Name" required>
-                    <input type="email" id="editEmail" name="email" placeholder="Email" required>
-                    <input type="tel" id="editPhoneNumber" name="phoneNumber" placeholder="Phone Number">
+                    <div class="mb-3">
+                        <label for="editFirstName" class="form-label">First Name*</label>
+                        <input type="text" class="form-control" id="editFirstName" name="firstName" 
+                               pattern="^[A-Za-z\s]{2,50}$" required
+                               oninput="validateName(this)">
+                        <div class="invalid-feedback">Please enter a valid first name (letters only)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editLastName" class="form-label">Last Name*</label>
+                        <input type="text" class="form-control" id="editLastName" name="lastName" 
+                               pattern="^[A-Za-z\s]{2,50}$" required
+                               oninput="validateName(this)">
+                        <div class="invalid-feedback">Please enter a valid last name (letters only)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email Addresses*</label>
+                        <div id="editEmailContainer">
+                            <!-- Email fields will be added here -->
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm add-field-btn" onclick="addEmailField('editEmailContainer')">
+                            <i class="bi bi-plus"></i> Add Email
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Phone Numbers*</label>
+                        <div id="editPhoneContainer">
+                            <!-- Phone fields will be added here -->
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm add-field-btn" onclick="addPhoneField('editPhoneContainer')">
+                            <i class="bi bi-plus"></i> Add Phone
+                        </button>
+                    </div>
                     <input type="hidden" id="editResourceName" name="resourceName">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -126,15 +235,15 @@
 </div>
 
 <!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Delete Contact</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Delete Contact</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                Are you sure you want to delete this contact?
+                <p>Are you sure you want to delete this contact?</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -149,60 +258,255 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Edit Modal Handler
+    function setValidationMessage(input, isValid, message) {
+        const formGroup = input.closest('.mb-3');
+        const feedback = formGroup.querySelector('.invalid-feedback');
+        if (!feedback) {
+            const div = document.createElement('div');
+            div.className = 'invalid-feedback';
+            input.parentNode.appendChild(div);
+        }
+        const feedbackElement = formGroup.querySelector('.invalid-feedback');
+        if (feedbackElement) {
+            feedbackElement.textContent = isValid ? '' : message;
+        }
+    }
+
+    function validateName(input) {
+        const nameRegex = /^[A-Za-z\s]{2,50}$/;
+        const value = input.value.trim();
+        
+        const isValid = nameRegex.test(value);
+        input.classList.toggle('is-valid', isValid);
+        input.classList.toggle('is-invalid', !isValid);
+        
+        const message = !isValid ? 
+            (value.length < 2 ? 'Name must be at least 2 characters' : 
+             value.length > 50 ? 'Name cannot exceed 50 characters' : 
+             'Name can only contain letters and spaces') : '';
+        
+        setValidationMessage(input, isValid, message);
+        return isValid;
+    }
+
+    function validateEmail(input) {
+        const emailRegex = /^[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const value = input.value.trim().toLowerCase();
+        
+        const isValid = emailRegex.test(value) && value.length <= 254;
+        input.classList.toggle('is-valid', isValid);
+        input.classList.toggle('is-invalid', !isValid);
+        
+        setValidationMessage(input, isValid, 'Please enter a valid email address');
+        return isValid;
+    }
+
+    function validatePhone(input) {
+        let value = input.value.replace(/\D/g, '');
+        
+        if (value.length > 10) value = value.slice(0, 10);
+        
+        // Format: XXX XXX XXXX
+        if (value.length > 6) {
+            value = value.slice(0, 3) + ' ' + value.slice(3, 6) + ' ' + value.slice(6);
+        } else if (value.length > 3) {
+            value = value.slice(0, 3) + ' ' + value.slice(3);
+        }
+        
+        input.value = value.trim();
+        
+        const isValid = value.replace(/\s/g, '').length === 10;
+        input.classList.toggle('is-valid', isValid);
+        input.classList.toggle('is-invalid', !isValid);
+        
+        setValidationMessage(input, isValid, 'Please enter a valid 10-digit phone number');
+        return isValid;
+    }
+
+    function addEmailField(containerId) {
+        const container = document.getElementById(containerId);
+        const newField = document.createElement('div');
+        newField.className = 'input-group mb-2';
+        newField.innerHTML = `
+            <input type="email" class="form-control" name="email[]" 
+                   pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" required
+                   oninput="validateEmail(this)"
+                   placeholder="Email address">
+            <button type="button" class="btn btn-outline-danger remove-field-btn" onclick="removeField(this)">
+                <i class="bi bi-dash"></i>
+            </button>
+        `;
+        container.appendChild(newField);
+    }
+
+    function addPhoneField(containerId) {
+        const container = document.getElementById(containerId);
+        const newField = document.createElement('div');
+        newField.className = 'input-group mb-2';
+        newField.innerHTML = `
+            <select class="form-select" name="countryCode[]" style="max-width: 120px;" required>
+                <option value="+63">🇵🇭 +63</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+81">🇯🇵 +81</option>
+                <option value="+86">🇨🇳 +86</option>
+                <option value="+82">🇰🇷 +82</option>
+                <option value="+65">🇸🇬 +65</option>
+            </select>
+            <input type="tel" class="form-control" name="phoneNumber[]" 
+                   required oninput="validatePhone(this)"
+                   placeholder="123 456 7890">
+            <button type="button" class="btn btn-outline-danger remove-field-btn" onclick="removeField(this)">
+                <i class="bi bi-dash"></i>
+            </button>
+        `;
+        container.appendChild(newField);
+    }
+
+    function removeField(button) {
+        const container = button.closest('.mb-3').querySelector('div[id]');
+        if (container.children.length > 1) {
+            button.closest('.input-group').remove();
+        }
+    }
+
+    function handleFormSubmit(event, formId) {
+        event.preventDefault();
+        const form = document.getElementById(formId);
+        
+        const firstName = form.querySelector('[name="firstName"]');
+        const lastName = form.querySelector('[name="lastName"]');
+        const emails = Array.from(form.querySelectorAll('[name="email[]"]'));
+        const phones = Array.from(form.querySelectorAll('[name="phoneNumber[]"]'));
+        const countryCodes = Array.from(form.querySelectorAll('[name="countryCode[]"]'));
+
+        // Validate name fields
+        const isValidNames = validateName(firstName) && validateName(lastName);
+
+        // Validate emails
+        let isValidEmails = true;
+        emails.forEach(email => {
+            isValidEmails = validateEmail(email) && isValidEmails;
+        });
+
+        // Validate phones
+        let isValidPhones = true;
+        phones.forEach(phone => {
+            isValidPhones = validatePhone(phone) && isValidPhones;
+        });
+
+        if (!isValidNames || !isValidEmails || !isValidPhones || emails.length === 0 || phones.length === 0) {
+            form.classList.add('was-validated');
+            return;
+        }
+
+        // Create hidden input fields for arrays if not present
+        if (form.querySelector('[name="email"]') === null) {
+            emails.forEach(email => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'email';
+                input.value = email.value;
+                form.appendChild(input);
+            });
+        }
+
+        if (form.querySelector('[name="phoneNumber"]') === null) {
+            phones.forEach((phone, index) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'phoneNumber';
+                input.value = countryCodes[index].value + phone.value.replace(/\D/g, '');
+                form.appendChild(input);
+            });
+        }
+
+        form.submit();
+    }
+
+    // Initialize form handling
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation
+        const forms = document.querySelectorAll('.needs-validation');
+        forms.forEach(form => {
+            form.addEventListener('submit', event => handleFormSubmit(event, form.id));
+        });
+
+        // Edit modal handler
         const editModal = document.getElementById('editModal');
-        editModal.addEventListener('show.bs.modal', event => {
-            try {
+        if (editModal) {
+            editModal.addEventListener('show.bs.modal', function(event) {
                 const button = event.relatedTarget;
                 
-                // Get all data attributes
-                const firstName = button.getAttribute('data-first-name');
-                const lastName = button.getAttribute('data-last-name');
-                const email = button.getAttribute('data-email');
-                const phoneNumber = button.getAttribute('data-phone-number');
-                const resourceName = button.getAttribute('data-resource-name');
+                // Clear existing fields
+                document.getElementById('editEmailContainer').innerHTML = '';
+                document.getElementById('editPhoneContainer').innerHTML = '';
 
-                // Validate required data
-                if (!resourceName) {
-                    console.error('Missing resource name');
-                    event.preventDefault();
-                    return;
-                }
+                // Set basic fields
+                document.getElementById('editResourceName').value = button.getAttribute('data-resource-name');
+                document.getElementById('editFirstName').value = button.getAttribute('data-first-name');
+                document.getElementById('editLastName').value = button.getAttribute('data-last-name');
 
-                // Set form values
-                document.getElementById('editFirstName').value = firstName || '';
-                document.getElementById('editLastName').value = lastName || '';
-                document.getElementById('editEmail').value = email || '';
-                document.getElementById('editPhoneNumber').value = phoneNumber || '';
-                document.getElementById('editResourceName').value = resourceName;
+                // Add email fields
+                const emails = button.getAttribute('data-email').split(',');
+                emails.forEach(email => {
+                    const container = document.getElementById('editEmailContainer');
+                    const div = document.createElement('div');
+                    div.className = 'input-group mb-2';
+                    div.innerHTML = `
+                        <input type="email" class="form-control" name="email[]" value="${email}"
+                               pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" required
+                               oninput="validateEmail(this)">
+                        <button type="button" class="btn btn-outline-danger remove-field-btn" onclick="removeField(this)">
+                            <i class="bi bi-dash"></i>
+                        </button>
+                    `;
+                    container.appendChild(div);
+                });
 
-            } catch (error) {
-                console.error('Error in edit modal handler:', error);
-                event.preventDefault();
-            }
-        });
+                // Add phone fields
+                const phones = button.getAttribute('data-phone-number').split(',');
+                phones.forEach(phone => {
+                    const phoneRegex = /^(\+\d{1,3})(\d{10})$/;
+                    const match = phone.match(phoneRegex);
+                    if (match) {
+                        const countryCode = match[1];
+                        const localNumber = match[2].replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+                        
+                        const container = document.getElementById('editPhoneContainer');
+                        const div = document.createElement('div');
+                        div.className = 'input-group mb-2';
+                        div.innerHTML = `
+                            <select class="form-select" name="countryCode[]" style="max-width: 120px;" required>
+                                <option value="+63" ${countryCode === '+63' ? 'selected' : ''}>🇵🇭 +63</option>
+                                <option value="+1" ${countryCode === '+1' ? 'selected' : ''}>🇺🇸 +1</option>
+                                <option value="+44" ${countryCode === '+44' ? 'selected' : ''}>🇬🇧 +44</option>
+                                <option value="+81" ${countryCode === '+81' ? 'selected' : ''}>🇯🇵 +81</option>
+                                <option value="+86" ${countryCode === '+86' ? 'selected' : ''}>🇨🇳 +86</option>
+                                <option value="+82" ${countryCode === '+82' ? 'selected' : ''}>🇰🇷 +82</option>
+                                <option value="+65" ${countryCode === '+65' ? 'selected' : ''}>🇸🇬 +65</option>
+                            </select>
+                            <input type="tel" class="form-control" name="phoneNumber[]" value="${localNumber}"
+                                   required oninput="validatePhone(this)">
+                            <button type="button" class="btn btn-outline-danger remove-field-btn" onclick="removeField(this)">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                        `;
+                        container.appendChild(div);
+                    }
+                });
+            });
+        }
 
-        // Delete Modal Handler
+        // Delete modal handler
         const deleteModal = document.getElementById('deleteModal');
-        deleteModal.addEventListener('show.bs.modal', event => {
-            try {
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
                 const button = event.relatedTarget;
                 const resourceName = button.getAttribute('data-resource-name');
-                
-                if (!resourceName) {
-                    console.error('Missing resource name for delete');
-                    event.preventDefault();
-                    return;
-                }
-
-                deleteModal.querySelector('#deleteResourceName').value = resourceName;
-
-            } catch (error) {
-                console.error('Error in delete modal handler:', error);
-                event.preventDefault();
-            }
-        });
+                document.getElementById('deleteResourceName').value = resourceName;
+            });
+        }
     });
 </script>
 </body>
